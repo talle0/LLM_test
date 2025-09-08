@@ -50,12 +50,12 @@ def create_claude_prompt(row_data):
 답:"""
     return prompt
 
-def ask_claude(client, prompt, max_retries=3):
+def ask_claude(client, prompt, model_name, max_retries=3):
     """클로드에게 질문하고 답변을 받습니다."""
     for attempt in range(max_retries):
         try:
             response = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model=model_name,
                 max_tokens=10,
                 temperature=0,
                 messages=[
@@ -88,6 +88,7 @@ def ask_claude(client, prompt, max_retries=3):
 
 def main():
     csv_file = 'test_set.csv'
+    model_name = "claude-opus-4-1-20250805"  # 모델명 정의
     
     print("클로드3 자동 답변 프로그램에 오신 것을 환영합니다!")
     
@@ -139,7 +140,7 @@ def main():
         prompt = create_claude_prompt(row)
         print("\n🤖 클로드가 생각 중...")
         
-        claude_answer = ask_claude(client, prompt)
+        claude_answer = ask_claude(client, prompt, model_name)
         
         if claude_answer is None:
             print("❌ 클로드 API 오류로 답변을 받을 수 없습니다.")
@@ -165,6 +166,10 @@ def main():
                 is_correct = True
             else:
                 print(f"❌ 틀렸습니다. 정답은 {correct_answer}번입니다.")
+            
+            # 현재까지의 정답률 표시
+            current_accuracy = (correct_answers / total_questions) * 100
+            print(f"📊 현재 정답률: {current_accuracy:.1f}% ({correct_answers}/{total_questions})")
         else:
             print("정답이 없어 정확성을 확인할 수 없습니다.")
         
@@ -181,7 +186,7 @@ def main():
     
     # 최종 결과 출력
     print(f"\n{'='*80}")
-    print("최종 결과")
+    print("🎯 최종 결과 요약")
     print(f"{'='*80}")
     print(f"총 질문 수: {len(df)}")
     print(f"API 오류: {api_errors}개")
@@ -189,8 +194,33 @@ def main():
     
     if 'Answer' in df.columns and total_questions > 0:
         accuracy = (correct_answers / total_questions) * 100
-        print(f"클로드 정답 수: {correct_answers}")
-        print(f"클로드 정답률: {accuracy:.1f}%")
+        wrong_answers = total_questions - correct_answers
+        
+        print(f"\n📈 클로드 성능 분석")
+        print(f"{'='*50}")
+        print(f"정답 수: {correct_answers}")
+        print(f"오답 수: {wrong_answers}")
+        print(f"🏆 최종 정답률: {accuracy:.1f}%")
+        
+        # 정답률에 따른 평가 메시지
+        print(f"\n💭 성능 평가:")
+        if accuracy >= 90:
+            print("🏆 클로드가 뛰어난 성능을 보였습니다! 매우 우수합니다!")
+        elif accuracy >= 80:
+            print("👍 클로드가 좋은 성능을 보였습니다!")
+        elif accuracy >= 70:
+            print("👌 클로드가 괜찮은 성능을 보였습니다!")
+        elif accuracy >= 60:
+            print("📚 클로드가 평균적인 성능을 보였습니다.")
+        else:
+            print("💪 클로드가 이 분야에서는 어려움을 겪었습니다.")
+        
+        # 정답률 시각화 (간단한 막대그래프)
+        print(f"\n📊 정답률 시각화:")
+        bar_length = 40
+        filled_length = int(bar_length * accuracy / 100)
+        bar = '█' * filled_length + '░' * (bar_length - filled_length)
+        print(f"[{bar}] {accuracy:.1f}%")
         
         # 상세 결과 표시
         print(f"\n{'='*80}")
@@ -203,8 +233,23 @@ def main():
         
         # 결과를 CSV로 저장
         results_df = pd.DataFrame(results)
-        results_file = 'claude_results.csv'
-        results_df.to_csv(results_file, index=False, encoding='utf-8-sig')
+        
+        # 최종 정답률 정보를 마지막 행에 추가
+        summary_row = {
+            'Question': f'SUMMARY - Model: {model_name}',
+            'Claude_Answer': f'Final Accuracy: {accuracy:.1f}%',
+            'Correct_Answer': f'Correct: {correct_answers}/{total_questions}',
+            'Is_Correct': f'Total Questions: {len(df)}, API Errors: {api_errors}'
+        }
+        
+        # 요약 행을 DataFrame에 추가
+        summary_df = pd.DataFrame([summary_row])
+        final_df = pd.concat([results_df, summary_df], ignore_index=True)
+        
+        # 모델명을 파일명에 활용 (특수문자 제거)
+        safe_model_name = model_name.replace("-", "_").replace(".", "_")
+        results_file = f'{safe_model_name}_results.csv'
+        final_df.to_csv(results_file, index=False, encoding='utf-8-sig')
         print(f"\n상세 결과가 '{results_file}' 파일로 저장되었습니다.")
     
     print("\n프로그램을 종료합니다.")
