@@ -43,6 +43,7 @@ def chat_completion(model_name, prompt):
     """
     chat_url = f"{LM_STUDIO_BASE_URL}/chat/completions"
     
+    
     # OpenAI Chat Completions API 형식에 맞는 요청 페이로드
     payload = {
         "model": model_name,
@@ -50,7 +51,7 @@ def chat_completion(model_name, prompt):
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.1, # 객관식 문제 풀이를 위해 낮은 값 설정
-        "max_tokens": 512
+        "max_tokens": 5122
     }
 
     try:
