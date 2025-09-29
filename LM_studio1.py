@@ -10,7 +10,7 @@ HEADERS = {
     "Content-Type": "application/json",
     "Authorization": "Bearer lm-studio" # 더미 API 키
 }
-CSV_FILE_PATH = "test.csv" # 파일 입력 모드에서 사용할 CSV 파일 경로
+CSV_FILE_PATH = "Disaster_Management.csv" # 파일 입력 모드에서 사용할 CSV 파일 경로
 
 def get_current_model_name():
     """

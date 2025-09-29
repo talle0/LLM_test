@@ -87,7 +87,7 @@ def ask_claude(client, prompt, model_name, max_retries=3):
                 return None
 
 def main():
-    csv_file = 'test_set.csv'
+    csv_file = 'Disaster_Management.csv'
     model_name = "claude-opus-4-1-20250805"  # 모델명 정의
     
     print("클로드3 자동 답변 프로그램에 오신 것을 환영합니다!")
